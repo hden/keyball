@@ -19,6 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include QMK_KEYBOARD_H
 
 #include "quantum.h"
+#include "lib/pointing_device/pointing_device_auto_mouse.h"
 
 // clang-format off
 const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
@@ -57,10 +58,42 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
 // clang-format on
 
 layer_state_t layer_state_set_user(layer_state_t state) {
-    // Auto enable scroll mode when the highest layer is 3
+    // Original Keyball behaviour
+    #ifndef POINTING_DEVICE_AUTO_MOUSE_ENABLE
     keyball_set_scroll_mode(get_highest_layer(state) == 3);
+    #endif
+
+    // Disable Automatic Mouse Layer when the highest layer is layer3
+    // https://wonwon-eater.com/keyball44/#outline__8_3_2
+    #ifdef POINTING_DEVICE_AUTO_MOUSE_ENABLE
+    switch(get_highest_layer(remove_auto_mouse_layer(state, true))) {
+        case 3:
+            // Auto enable scroll mode when the highest layer is 3
+            state = remove_auto_mouse_layer(state, false);
+            set_auto_mouse_enable(false);
+            keyball_set_scroll_mode(true);
+            break;
+        default:
+            set_auto_mouse_enable(true);
+            keyball_set_scroll_mode(false);
+            break;
+    }
+    #endif //POINTING_DEVICE_AUTO_MOUSE_ENABLE
+
     return state;
 }
+
+#ifdef POINTING_DEVICE_AUTO_MOUSE_ENABLE
+// Backport Automatic Mouse Layer
+// TODO: Delete me when https://github.com/Yowkees/keyball/pull/183 is released.
+report_mouse_t pointing_device_task_user(report_mouse_t mouse_report) {
+    pointing_device_task_auto_mouse(mouse_report);
+    return mouse_report;
+}
+bool process_record_user(uint16_t keycode, keyrecord_t *record) {
+    return process_auto_mouse(keycode, record);
+}
+#endif
 
 #ifdef OLED_ENABLE
 

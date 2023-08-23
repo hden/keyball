@@ -29,6 +29,10 @@ POINTING_DEVICE_DRIVER = custom
 SRC += drivers/pmw3360/pmw3360.c
 QUANTUM_LIB_SRC += spi_master.c # Optical sensor use SPI to communicate
 
+# Backport Automatic Mouse Layer
+# https://docs.qmk.fm/#/feature_pointing_device?id=pointing-device-auto-mouse
+SRC += lib/pointing_device/pointing_device_auto_mouse.c
+
 # This is unnecessary for processing KC_MS_BTN*.
 MOUSEKEY_ENABLE = no
 
